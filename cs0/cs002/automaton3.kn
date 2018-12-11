@@ -1,0 +1,60 @@
+enum State
+	q1
+	q2
+	q3
+	q4
+	q5
+	q6
+	q7
+	q8
+end enum
+
+func transitionFunction(state: @State, alphabet: char): @State
+	if(state = %q1 & alphabet = 'く')
+		ret %q2
+	elif(state = %q2 & alphabet = 'い')
+		ret %q3
+	elif(state = %q3 & alphabet = 'な')
+		ret %q4
+	elif(state = %q4 & alphabet = 'ち')
+		ret %q5
+	elif(state = %q5 & alphabet = 'ゃ')
+		ret %q6
+	elif(state = %q6 & alphabet = 'ん')
+		ret %q7
+	else
+		ret %q8
+	end if
+end func
+
+; この関数はオートマトンを動作させて、
+; 入力の文字列を受理すればtrue, 拒否すればfalseを返します。
+func runAutomaton(str: []char): bool
+	var state: @State :: %q1
+	for i(0, ^str - 1)
+		do state :: @transitionFunction(state, str[i])
+	end for
+	if(state = %q7)
+		ret true
+	else
+		ret false
+	end if
+end func
+
+; この関数はオートマトンに文字列を入力し、
+; 入力と結果を印字します。
+func check(str: []char)
+	do cui@print("入力=\"" ~ str ~ "\", 結果=")
+	if(@runAutomaton(str))
+		do cui@print("受理\n")
+	else
+		do cui@print("拒否\n")
+	end if
+end func
+
+func main()
+	do @check("くいなちゃん")
+	do @check("くいな")
+	do @check("くいなちゃんくいなちゃん")
+	do @check("kuin")
+end func

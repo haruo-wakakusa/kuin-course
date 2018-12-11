@@ -1,0 +1,20 @@
+func runAutomaton(automaton: \automaton1@Automaton, str: []char): bool
+	var a: \automaton1@Automaton :: automaton.clone()
+	for i(0, ^str - 1)
+		do a.put(str[i])
+	end for
+	ret a.isAccepted()
+end func
+
+func check(str: []char)
+	var res: []char ::
+	|@runAutomaton(\automaton1@makeOneChar('く'), str) ?("受理", "拒否")
+	do cui@print("入力=\"\{str}\", 結果=\{res}\n")
+end func
+
+func main()
+	do @check("")
+	do @check("く")
+	do @check("くい")
+	do @check("い")
+end func
