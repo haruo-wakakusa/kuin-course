@@ -1,0 +1,95 @@
+; 任意のオートマトンを表すクラス
++class Automaton()
+	; 受理されているならばtrue, 拒否されていればfalse
+	+func isAccepted(): bool
+		ret false
+	end func
+	
+	; 一文字入力して状態を更新する関数
+	+func put(c: char)
+	end func
+	
+	; 自身のクローンを作る関数
+	+func clone(): @Automaton
+		ret null
+	end func
+end class
+
+; 特定の一文字からなる文字列を受理するオートマトン
+class OneChar(@Automaton)
+	+var character: char
+	+var state: int
+	
+	*func ctor()
+		do me.character :: '\0'
+		do me.state :: 0
+	end func
+	
+	+*func isAccepted(): bool
+		ret me.state = 1
+	end func
+	
+	+*func put(c: char)
+		do me.state :: me.state = 0 & c = me.character ?(1, 2)
+	end func
+	
+	+*func clone(): @Automaton
+		var res: @OneChar :: #@OneChar
+		do res.character :: me.character
+		ret res
+	end func
+end class
+
++func makeOneChar(c: char): @Automaton
+	var res: @OneChar :: #@OneChar
+	do res.character :: c
+	ret res
+end func
+
+; ２つのオートマトンの連結演算を行うクラス
+class Concatenation(@Automaton)
+	+var automatonA: @Automaton {テンプレートと実働を兼ねる}
+	+var automatonB: @Automaton {テンプレートのみ}
+	+var listB: list<@Automaton> {実働}
+	
+	*func ctor()
+		do me.listB :: #list<@Automaton>
+	end func
+	
+	+*func isAccepted(): bool
+		do me.listB.head()
+		while(!me.listB.term())
+			if(me.listB.get().isAccepted())
+				ret true
+			end if
+			do me.listB.next()
+		end while
+		ret false
+	end func
+	
+	+*func put(c: char)
+		if(me.automatonA.isAccepted())
+			do me.listB.add(me.automatonB.clone())
+		end if
+		do me.automatonA.put(c)
+		do me.listB.head()
+		while(!me.listB.term())
+			do me.listB.get().put(c)
+			do me.listB.next()
+		end while
+	end func
+	
+	+*func clone(): @Automaton
+		var res: @Concatenation :: #@Concatenation
+		do res.automatonA :: me.automatonA.clone()
+		do res.automatonB :: me.automatonB.clone()
+		ret res
+	end func
+end class
+
++func makeConcatenation(a: @Automaton, b: @Automaton): @Automaton
+	var res: @Concatenation :: #@Concatenation
+	do res.automatonA :: a.clone()
+	do res.automatonB :: b.clone()
+	ret res
+end func
