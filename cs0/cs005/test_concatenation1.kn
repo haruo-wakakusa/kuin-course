@@ -1,0 +1,52 @@
+; test_concatenation1.kn
+;  一文字を認識するオートマトンどうしの連結演算を行って
+;  文字列を認識するオートマトンを生成できることを確認する
+
+func runAutomaton(automaton: \automaton@Automaton, str: []char): bool
+	var a: \automaton@Automaton :: automaton.clone()
+	for i(0, ^str - 1)
+		do a.put(str[i])
+	end for
+	ret a.isAccepted()
+end func
+
+var automaton: \automaton@Automaton
+
+func check(str: []char)
+	var res: []char ::
+	|@runAutomaton(@automaton, str) ?("受理", "拒否")
+	do cui@print("入力=\"\{str}\", 結果=\{res}\n")
+end func
+
+func main()
+	alias a: \automaton@Automaton
+	var ku: a :: \automaton@makeOneChar('く')
+	var i: a :: \automaton@makeOneChar('い')
+	var kui: a :: \automaton@makeConcatenation(ku, i)
+	do @automaton :: kui
+	do cui@print("check kui:\n")
+	do @check("")
+	do @check("く")
+	do @check("い")
+	do @check("くい")
+	do @check("くいな")
+	var kuinachan: a
+	|::
+	|\automaton@makeConcatenation(\automaton@makeOneChar('く'),
+	|\automaton@makeConcatenation(\automaton@makeOneChar('い'),
+	|\automaton@makeConcatenation(\automaton@makeOneChar('な'),
+	|\automaton@makeConcatenation(\automaton@makeOneChar('ち'),
+	|\automaton@makeConcatenation(\automaton@makeOneChar('ゃ'),
+	|\automaton@makeOneChar('ん'))))))
+	do @automaton :: kuinachan
+	do cui@print("check kuinachan:\n")
+	do @check("")
+	do @check("く")
+	do @check("くい")
+	do @check("くいな")
+	do @check("くいなち")
+	do @check("くいなちゃ")
+	do @check("くいなちゃん")
+	do @check("くいなちゃんく")
+	do @check("くいなちゃんくいなちゃん")
+end func

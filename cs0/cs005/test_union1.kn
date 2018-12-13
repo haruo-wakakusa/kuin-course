@@ -1,0 +1,50 @@
+; test_union1.kn
+
+func runAutomaton(automaton: \automaton@Automaton, str: []char): bool
+	var a: \automaton@Automaton :: automaton.clone()
+	for i(0, ^str - 1)
+		do a.put(str[i])
+	end for
+	ret a.isAccepted()
+end func
+
+var automaton: \automaton@Automaton
+
+func check(str: []char)
+	var res: []char ::
+	|@runAutomaton(@automaton, str) ?("受理", "拒否")
+	do cui@print("入力=\"\{str}\", 結果=\{res}\n")
+end func
+
+; 文字列をオートマトンに変換する関数
+func toAutomaton(str: []char): \automaton@Automaton
+	var res: \automaton@Automaton
+	do res :: \automaton@makeOneChar(str[0])
+	for i(1, ^str - 1)
+		do res :: \automaton@makeConcatenation(
+		|res, \automaton@makeOneChar(str[i]))
+	end for
+	ret res
+end func
+
+func main()
+	alias a: \automaton@Automaton
+	do cui@print("test kuina or chan\n")
+	do @automaton :: \automaton@makeUnion(
+	|@toAutomaton("くいな"), @toAutomaton("ちゃん"))
+	do @check("")
+	do @check("くいな")
+	do @check("ちゃん")
+	do @check("くいなちゃん")
+	do @check("く")
+	do @check("ち")
+	do cui@print("test kuinachan or rokusai\n")
+	do @automaton :: \automaton@makeUnion(
+	|@toAutomaton("くいなちゃん"), @toAutomaton("６さい"))
+	do @check("")
+	do @check("くいな")
+	do @check("ちゃん")
+	do @check("くいなちゃん")
+	do @check("６さい")
+	do @check("くいなちゃん６さい")
+end func
