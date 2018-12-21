@@ -1,0 +1,292 @@
++var rgNum: regex@Regex {整数または小数のパターン}
++var rgInt: regex@Regex {整数のパターン}
+
+;
+; 字句解析ルーチン(エラーならばnull)
+;
+func lex(str: []char): list<[]char>
+	var rg: regex@Regex
+	|:: regex@makeRegex("([0-9]+\\.[0-9]+|[0-9]+|[\\+\\-\\*\\/\\(\\) ])(.*)")
+	var s: []char :: str
+	var res: list<[]char> :: #list<[]char>
+	var match: [][]char
+	; 文字列の終端に来るまでトークンのマッチを行う
+	while(^s <> 0)
+		do match :: rg.match(s)
+		if(match =& null)
+			ret null
+		end if
+		do res.add(match[1])
+		do s :: match[2]
+	end while
+	; トークンのリストから空白を削除する
+	do res.head()
+	while(!res.term())
+		if(res.get() = " ")
+			do res.del()
+		else
+			do res.next()
+		end if
+	end while
+	
+	ret res
+end func
+
+;
+; 抽象構文木のクラス
+;
+
+enum ExpOp
+	add
+	sub
+end enum
+
+enum TermOp
+	mul
+	div
+end enum
+
+class AstNode()
+	+func toString(): []char
+		ret "[dummy string]"
+	end func
+end class
+
+class Exp(@AstNode)
+	+var minus: bool
+	+var pexp: @Pexp
+	+*func toString(): []char
+		ret "(EXP " ~ (me.minus ?("- ", "")) ~ me.pexp.toString() ~ ")"
+	end func
+end class
+
+class Pexp(@AstNode)
+end class
+
+class AtomicPexp(@Pexp)
+	+var term: @Term
+	+*func toString(): []char
+		ret "(APEXP " ~ me.term.toString() ~ ")"
+	end func
+end class
+
+class ComplexPexp(@Pexp)
+	+var term: @Term
+	+var op: @ExpOp
+	+var rest: @Pexp
+	+*func toString(): []char
+		ret "(CPEXP " ~ me.term.toString() ~ " "
+		|~(me.op = %add ?("+", "-")) ~ " "
+		|~me.rest.toString() ~ ")"
+	end func
+end class
+
+class Term(@AstNode)
+end class
+
+class AtomicTerm(@Term)
+	+var factor: @Factor
+	+*func toString(): []char
+		ret "(ATERM " ~ me.factor.toString() ~ ")"
+	end func
+end class
+
+class ComplexTerm(@Term)
+	+var factor: @Factor
+	+var op: @TermOp
+	+var rest: @Term
+	+*func toString(): []char
+		ret "(CTERM " ~ me.factor.toString() ~ " "
+		|~(me.op = %mul ?("*", "/")) ~ " "
+		|~me.rest.toString() ~ ")"
+	end func
+end class
+
+class Factor(@AstNode)
+end class
+
+class AtomicFactor(@Factor)
+	+var numstr: []char
+	+*func toString(): []char
+		ret me.numstr
+	end func
+end class
+
+class ComplexFactor(@Factor)
+	+var exp: @Exp
+	+*func toString(): []char
+		ret "(CFACTOR " ~ me.exp.toString() ~ ")"
+	end func
+end class
+
+;
+; 再帰関数
+;
+
+func makeExp(tokens: [][]char, istart: int, iend: int): @Exp
+	var tmp: @Exp :: #@Exp
+	if(istart >= iend)
+		ret null
+	elif(tokens[istart] = "-")
+		do tmp.minus :: true
+		do tmp.pexp :: @makePexp(tokens, istart + 1, iend)
+	else
+		do tmp.minus :: false
+		do tmp.pexp :: @makePexp(tokens, istart, iend)
+	end if
+	ret(tmp.pexp <>& null ?(tmp, null))
+end func
+
+func makePexp(tokens: [][]char, istart: int, iend: int): @Pexp
+	if(istart >= iend)
+		ret null
+	end if
+	var tmpa: @AtomicPexp :: #@AtomicPexp
+	do tmpa.term :: @makeTerm(tokens, istart, iend)
+	if(tmpa.term <>& null)
+		ret tmpa
+	end if
+	var tmpc: @ComplexPexp :: #@ComplexPexp
+	for i(istart + 1, iend - 1)
+		do tmpc.op :: (tokens[i] = "+") ?(%add $ @ExpOp, %sub $ @ExpOp)
+		if(tokens[i] = "+" | tokens[i] = "-")
+			do tmpc.term :: @makeTerm(tokens, istart, i)
+			if(tmpc.term <>& null)
+				do tmpc.rest :: @makePexp(tokens, i + 1, iend)
+				if(tmpc.rest <>& null)
+					ret tmpc
+				end if
+			end if
+		end if
+	end for
+	ret null
+end func
+
+func makeTerm(tokens: [][]char, istart: int, iend: int): @Term
+	var factor: @Factor
+	var term: @Term
+	if(istart >= iend)
+		ret null
+	end if
+	do factor :: @makeFactor(tokens, istart, iend)
+	if(factor <>& null)
+		var resa: @AtomicTerm :: #@AtomicTerm
+		do resa.factor :: factor
+		ret resa
+	end if
+	for i(istart + 1, iend - 1)
+		if(tokens[i] <> "*" & tokens[i] <> "/")
+			skip i
+		end if
+		do factor :: @makeFactor(tokens, istart, i)
+		if(factor =& null)
+			skip i
+		end if
+		do term :: @makeTerm(tokens, i + 1, iend)
+		if(term <>& null)
+			var resc: @ComplexTerm :: #@ComplexTerm
+			do resc.factor :: factor
+			do resc.op :: (tokens[i] = "*") ?(%mul $ @TermOp, %div $ @TermOp)
+			do resc.rest :: term
+			ret resc
+		end if
+	end for
+	ret null
+end func
+
+func makeFactor(tokens: [][]char, istart: int, iend: int): @Factor
+	if(iend - istart = 1)
+		if(@rgNum.match(tokens[istart]) <>& null)
+			var res: @AtomicFactor :: #@AtomicFactor
+			do res.numstr :: tokens[istart]
+			ret res
+		else
+			ret null
+		end if
+	else
+		if(tokens[istart] = "(" & tokens[iend - 1] = ")")
+			var exp: @Exp :: @makeExp(tokens, istart + 1, iend - 1)
+			if(exp <>& null)
+				var res: @ComplexFactor :: #@ComplexFactor
+				do res.exp :: exp
+				ret res
+			else
+				ret null
+			end if
+		end if
+	end if
+end func
+
+func calcExp(exp: @Exp): float
+	if(exp.pexp =$ @AtomicPexp)
+		var pexpval: float :: @calcTerm((exp.pexp $ @AtomicPexp).term)
+		ret exp.minus ?(-pexpval, pexpval)
+	else
+		var cpexp: @ComplexPexp :: exp.pexp $ @ComplexPexp
+		var res: float :: @calcTerm(cpexp.term)
+		do res :: exp.minus ?(-res, res)
+		var next: float
+		while(cpexp.rest =$ @ComplexPexp)
+			var rest: @ComplexPexp :: cpexp.rest $ @ComplexPexp
+			do next :: @calcTerm(rest.term)
+			do res :: (cpexp.op = %add) ?(res + next, res - next)
+			do cpexp :: rest
+		end while
+		do next :: @calcTerm((cpexp.rest $ @AtomicPexp).term)
+		ret(cpexp.op = %add) ?(res + next, res - next)
+	end if
+end func
+
+func calcTerm(term: @Term): float
+	if(term =$ @AtomicTerm)
+		ret @calcFactor((term $ @AtomicTerm).factor)
+	else
+		var cterm: @ComplexTerm :: term $ @ComplexTerm
+		var res: float :: @calcFactor(cterm.factor)
+		var next: float
+		while(cterm.rest =$ @ComplexTerm)
+			var rest: @ComplexTerm :: cterm.rest $ @ComplexTerm
+			do next :: @calcFactor(rest.factor)
+			do res :: (cterm.op = %mul) ?(res * next, res / next)
+			do cterm :: rest
+		end while
+		do next :: @calcFactor((cterm.rest $ @AtomicTerm).factor)
+		ret(cterm.op = %mul) ?(res * next, res / next)
+	end if
+end func
+
+func calcFactor(factor: @Factor): float
+	if(factor =$ @ComplexFactor)
+		ret @calcExp((factor $ @ComplexFactor).exp)
+	else
+		var suc: bool
+		var res: float :: ((factor $ @AtomicFactor).numstr).toFloat(&suc)
+		if(!suc)
+			do cui@print("パースエラー\n")
+			throw 1
+		end if
+		ret res
+	end if
+end func
+
+;
+; メインルーチン
+;
+func main()
+	do @rgNum :: regex@makeRegex("[0-9]+|[0-9]+\\.[0-9]+")
+	do @rgInt :: regex@makeRegex("[0-9]+")
+	
+	var tokens: [][]char :: @lex(cui@input()).toArray()
+	if(tokens =& null)
+		do cui@print("字句解析でエラー\n")
+		ret
+	end if
+	
+	var exp: @Exp :: @makeExp(tokens, 0, ^tokens)
+	if(exp =& null)
+		do cui@print("構文解析でエラー\n")
+		ret
+	end if
+	do cui@print(exp.toString() ~ "\n")
+	do cui@print(@calcExp(exp).toStr() ~ "\n")
+end func

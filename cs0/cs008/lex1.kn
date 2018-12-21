@@ -1,0 +1,30 @@
+; 字句解析ルーチン(エラーならばnull)
+func lex(str: []char): list<[]char>
+	var rg: regex@Regex
+	|:: regex@makeRegex("([0-9]+\\.[0-9]+|[0-9]+|[\\+\\-\\*\\/\\(\\) ])(.*)")
+	var s: []char :: str
+	var res: list<[]char> :: #list<[]char>
+	var match: [][]char
+	while(^s <> 0)
+		do match :: rg.match(s)
+		if(match =& null)
+			ret null
+		end if
+		do res.add(match[1])
+		do s :: match[2]
+	end while
+	ret res
+end func
+
+func main()
+	var tokens: list<[]char> :: @lex(cui@input())
+	if(tokens =& null)
+		do cui@print("エラー\n")
+	else
+		do tokens.head()
+		while(!tokens.term())
+			do cui@print(tokens.get() ~ "\n")
+			do tokens.next()
+		end while
+	end if
+end func
