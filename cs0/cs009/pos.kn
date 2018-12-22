@@ -1,0 +1,16 @@
+; pos.kn
+;   Kuinリポジトリのsrc/compile/pos.h, pos.cに対応
+;
+
++class SPos()
+	+var srcName: []char
+	+var row: int
+	+var col: int
+end class
+
++func newPos(src_name: []char, row: int, col: int): @SPos
+	var pos: @SPos :: #@SPos
+	do pos.srcName :: src_name
+	do pos.row :: row
+	do pos.col :: col
+end func

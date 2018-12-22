@@ -1,0 +1,6 @@
+; asm.kn
+;   Kuinリポジトリのsrc/compiler/asm.h, asm.cに対応
+;
+
++class SAsmLabel()
+end class

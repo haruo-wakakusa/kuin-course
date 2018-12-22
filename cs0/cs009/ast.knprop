@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<icon></icon>
+	<env>wnd</env>
+	<resources>
+		<resource>asm.kn</resource>
+		<resource>pos.kn</resource>
+	</resources>
+</configuration>

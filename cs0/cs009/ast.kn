@@ -1,0 +1,261 @@
+; ast.kn
+;   Kuinリポジトリのsrc/compiler/ast.h, ast.cに対応
+;
+
++enum EAstTypeId
+	ast :: 0x00
+	root :: 0x01
+	_func :: 0x0100 {funcはKuinの予約語なので_funcで代用、以下同様}
+	funcRaw :: 0x0101
+	_var :: 0x02
+	_const :: 0x03
+	_alias :: 0x04
+	_class :: 0x05
+	_enum :: 0x06
+	arg :: 0x07
+	stat :: 0x0200
+	statBreakable :: 0x00010200
+	statSkipable :: 0x01000200
+	statEnd :: 0x201
+	statFunc :: 0x202
+	statVar :: 0x203
+	statConst :: 0x204
+	statAlias :: 0x205
+	statClass :: 0x206
+	statEnum :: 0x207
+	statIf :: 0x00010201
+	statElIf :: 0x208
+	statElse :: 0x209
+	statSwitch :: 0x00010202
+	statCase :: 0x20A
+	statDefault :: 0x20B
+	statWhile :: 0x01000201
+	statFor :: 0x01000202
+	statTry :: 0x00010203
+	statCatch :: 0x20C
+	statFinally :: 0x20D
+	statThrow :: 0x20E
+	statBlock :: 0x00010204
+	statRet :: 0x20F
+	statDo :: 0x210
+	statBreak :: 0x211
+	statSkip :: 0x212
+	statAssert :: 0x213
+	type :: 0x0400
+	typeNullable :: 0x00010400
+	typeArray :: 0x00010401
+	typeBit :: 0x401
+	typeFunc :: 0x00010402
+	typeGen :: 0x00010403
+	typeDict :: 0x00010404
+	typePrim :: 0x402
+	typeUser :: 0x00010405
+	typeNull :: 0x403
+	typeEnumElement :: 0x404
+	expr :: 0x0800
+	expr1 :: 0x0801
+	expr2 :: 0x0802
+	expr3 :: 0x0803
+	exprNew :: 0x0804
+	exprNewArray :: 0x0805
+	exprAs :: 0x0806
+	exprToBin :: 0x0807
+	exprFromBin :: 0x0808
+	exprCall :: 0x0809
+	exprArray :: 0x080A
+	exprDot :: 0x080B
+	exprValue :: 0x080C
+	exprValueArray :: 0x080C
+	exprRef :: 0x080E
+end enum
+
++class SAst()
+	+var typeId: @EAstTypeId
+	+var pos: \pos@SPos
+	+var name: []char
+	+var scopeParent: @SAst
+	+var scopeChildren: dict<[]char, @SAst>
+	+var scopeRefedItems: list<@SAst>
+	+var refName: []char
+	+var refItem: @SAst
+	+var analyzedCache: @SAst
+	+var public: bool
+end class
+
++class SAstRoot()
+	+var ast: @SAst
+	+var items: list<@SAst>
+end class
+
++enum EFuncAttr
+	none :: 0x00
+	callback :: 0x01 {Conform to the x64 calling convention.}
+	anyType :: 0x02 {Ignore type checking of 'me' and the add the type of it to the second argument.}
+	init :: 0x04 {Pass necessary information for initialization.}
+	takeMe :: 0x08 {The function receives a value of the same type as 'me' in the third argument.}
+	retMe :: 0x10 {The function returns a value of the same type as 'me'.}
+	takeChild :: 0x20 {The function receives a value of the type of elements of 'me' in the third argument.}
+	retChild :: 0x40 {The function returns a value of the type of elements of 'me'.}
+	takeKeyValue :: 0x80 {The function receives a value of the type of 'key' in the third argument and a value of the type of 'value' in the fourth.}
+	retArrayOfListChild :: 0x0100 {The function returns an array of the type of list elements of 'me'.}
+	makeInstance :: 0x0200 {Make an instance before calling the function.}
+	force :: 0x0400 {Force to define a method that cannot be overridden.}
+	exitCode :: 0x0800 {Set 'ExitCode'.}
+	takeKeyValueFunc :: 0x1000 {The function receives a callback function that receives key-value pairs.}
+	retArrayOfDictKey :: 0x2000
+	retArrayOfDictValue :: 0x4000
+end enum
+
++class SAstFunc()
+	+var ast: @SAst
+	+var addrTop: int {TODO: 直すかも}
+	+var addrBottom: int
+	+var posRowBottom: int
+	+var dllName: []char
+	+var dllFuncName: []char
+	+var funcAttr: @EFuncAttr
+	+var args: list<kuin@Class> {TODO: 直すかも}
+	+var _ret: @SAstType
+	+var stats: list<kuin@Class> {TODO: 直すかも}
+	+var retPoint: \asm@SAsmLabel
+end class
+
++class SAstFuncRaw()
+	+var astFunc: @SAstFunc
+	+var asms: list<kuin@Class> {TODO: 直すかも}
+	+var argNum: int
+	+var header: list<kuin@Class> {TODO: 直すかも}
+end class
+
++class SAstVar()
+	+var ast: @SAst
+	+var _var: @SAstArg
+end class
+
++class SAstConst()
+	+var ast: @SAst
+	+var _var: @SAstArg
+end class
+
++class SAstAlias()
+	+var ast: @SAst
+	+var type: @SAstType
+end class
+
++class SAstClassItem()
+	+var public: bool
+	+var override: bool
+	+var def: @SAst
+	+var parentItem: @SAstClassItem
+	+var addr: int
+end class
+
++class SAstClass()
+	+var ast: @SAst
+	+var addr: int {TODO: 直すかも}
+	+var varSize: int
+	+var funcSize: int
+	+var items: list<kuin@Class> {TODO: 直すかも}
+	+var indirectCreation: bool
+end class
+
++class SAstEnum()
+	+var ast: @SAst
+	+var items: list<kuin@Class> {TODO: 直すかも}
+end class
+
++enum EAstArgKind
+	unknown
+	global
+	localArg
+	localVar
+	_const
+	member
+end enum
+
++class SAstArg()
+	+var ast: @SAst
+	+var addr: int {TODO: 直すかも}
+	+var kind: @EAstArgKind
+	+var refVar: bool
+	+var type: @SAstType
+	+var expr: @SAstExpr
+end class
+
++class SAstStat()
+	+var ast: @SAst
+	+var asmTop: @AsmTop
+	+var asmBottom: @AsmBottom
+end class
+
++class SAstStatBreakable()
+	+var astStat: @SAstStat
+	+var blockVar: @SAstArg
+	+var breakpoint: \asm@SAsmLabel
+end class
+
++class SAstStatSkipable()
+	+var astStatBreakable: @SAstStatBreakable
+	+var skipPoint: @SAsmLabel
+end class
+
++class SAstStatFunc()
+	+var astStat: @SAstStat
+	+var def: @SAstFunc
+end class
+
++class SAstStatVar()
+	+var astStat: @SAstStat
+	+var def: @SAstVar
+end class
+
++class SAstStatConst()
+	+var astStat: @SAstStat
+	+var def: @SAstConst
+end class
+
++class SAstStatAlias()
+	+var astStat: @SAstStat
+	+var def: @SAstAlias
+end class
+
++class SAstStatClass()
+	+var astStat: @SAstStat
+	+var def: @SAstClass
+end class
+
++class SAstStatEnum()
+	+var astStat: @SAstStat
+	+var def: @SAstEnum
+end class
+
++class SAstStatIf()
+	+var astStatBreakable: @SAstStatBreakable
+	+var cond: @SAstExpr
+	+var statBlock: @SAstStatBlock
+	+var elIfs: list<kuin@Class> {TODO: 直すかも}
+	+var elseStatBlock: @SAstStatBlock
+end class
+
++class SAstStatElIf()
+	+var astStat: @SAstStat
+	+var cond: @SAstExpr
+	+var statBlock: @SAstStatBlock
+end class
+
++class SAstStatSwitch()
+	+var astStatBreakable: @SAstStatBreakable
+	+var cond: @SAstExpr
+	+var cases: list<kuin@Class> {TODO: 直すかも}
+	+var defaultStatBlock: @SAstStatBlock
+end class
+
+; シャポコ
+
++class SAstStatCase(@SAstStat)
+	+var cond: list<kuin@Class> {TODO: 直すかも}
+end class
+
+func main()
+	
+end func
