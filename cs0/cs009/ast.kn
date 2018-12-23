@@ -65,7 +65,7 @@
 	exprArray :: 0x080A
 	exprDot :: 0x080B
 	exprValue :: 0x080C
-	exprValueArray :: 0x080C
+	exprValueArray :: 0x080D
 	exprRef :: 0x080E
 end enum
 
@@ -82,8 +82,7 @@ end enum
 	+var public: bool
 end class
 
-+class SAstRoot()
-	+var ast: @SAst
++class SAstRoot(@SAst)
 	+var items: list<@SAst>
 end class
 
@@ -106,8 +105,7 @@ end class
 	retArrayOfDictValue :: 0x4000
 end enum
 
-+class SAstFunc()
-	+var ast: @SAst
++class SAstFunc(@SAst)
 	+var addrTop: int {TODO: 直すかも}
 	+var addrBottom: int
 	+var posRowBottom: int
@@ -120,25 +118,21 @@ end enum
 	+var retPoint: \asm@SAsmLabel
 end class
 
-+class SAstFuncRaw()
-	+var astFunc: @SAstFunc
++class SAstFuncRaw(@SAstFunc)
 	+var asms: list<kuin@Class> {TODO: 直すかも}
 	+var argNum: int
 	+var header: list<kuin@Class> {TODO: 直すかも}
 end class
 
-+class SAstVar()
-	+var ast: @SAst
++class SAstVar(@SAst)
 	+var _var: @SAstArg
 end class
 
-+class SAstConst()
-	+var ast: @SAst
++class SAstConst(@SAst)
 	+var _var: @SAstArg
 end class
 
-+class SAstAlias()
-	+var ast: @SAst
++class SAstAlias(@SAst)
 	+var type: @SAstType
 end class
 
@@ -150,8 +144,7 @@ end class
 	+var addr: int
 end class
 
-+class SAstClass()
-	+var ast: @SAst
++class SAstClass(@SAst)
 	+var addr: int {TODO: 直すかも}
 	+var varSize: int
 	+var funcSize: int
@@ -159,8 +152,7 @@ end class
 	+var indirectCreation: bool
 end class
 
-+class SAstEnum()
-	+var ast: @SAst
++class SAstEnum(@SAst)
 	+var items: list<kuin@Class> {TODO: 直すかも}
 end class
 
@@ -173,8 +165,7 @@ end class
 	member
 end enum
 
-+class SAstArg()
-	+var ast: @SAst
++class SAstArg(@SAst)
 	+var addr: int {TODO: 直すかも}
 	+var kind: @EAstArgKind
 	+var refVar: bool
@@ -182,79 +173,472 @@ end enum
 	+var expr: @SAstExpr
 end class
 
-+class SAstStat()
-	+var ast: @SAst
-	+var asmTop: @AsmTop
-	+var asmBottom: @AsmBottom
++class SAstStat(@SAst)
+	+var asmTop: \asm@SAsm
+	+var asmBottom: \asm@SAsm
+	+var posRowBottom: int
 end class
 
-+class SAstStatBreakable()
-	+var astStat: @SAstStat
++class SAstStatBreakable(@SAstStat)
 	+var blockVar: @SAstArg
 	+var breakpoint: \asm@SAsmLabel
 end class
 
-+class SAstStatSkipable()
-	+var astStatBreakable: @SAstStatBreakable
-	+var skipPoint: @SAsmLabel
++class SAstStatSkipable(@SAstStatBreakable)
+	+var skipPoint: \asm@SAsmLabel
 end class
 
-+class SAstStatFunc()
-	+var astStat: @SAstStat
++class SAstStatFunc(@SAstStat)
 	+var def: @SAstFunc
 end class
 
-+class SAstStatVar()
-	+var astStat: @SAstStat
++class SAstStatVar(@SAstStat)
 	+var def: @SAstVar
 end class
 
-+class SAstStatConst()
-	+var astStat: @SAstStat
++class SAstStatConst(@SAstStat)
 	+var def: @SAstConst
 end class
 
-+class SAstStatAlias()
-	+var astStat: @SAstStat
++class SAstStatAlias(@SAstStat)
 	+var def: @SAstAlias
 end class
 
-+class SAstStatClass()
-	+var astStat: @SAstStat
++class SAstStatClass(@SAstStat)
 	+var def: @SAstClass
 end class
 
-+class SAstStatEnum()
-	+var astStat: @SAstStat
++class SAstStatEnum(@SAstStat)
 	+var def: @SAstEnum
 end class
 
-+class SAstStatIf()
-	+var astStatBreakable: @SAstStatBreakable
++class SAstStatIf(@SAstStatBreakable)
 	+var cond: @SAstExpr
 	+var statBlock: @SAstStatBlock
 	+var elIfs: list<kuin@Class> {TODO: 直すかも}
 	+var elseStatBlock: @SAstStatBlock
 end class
 
-+class SAstStatElIf()
-	+var astStat: @SAstStat
++class SAstStatElIf(@SAstStat)
 	+var cond: @SAstExpr
 	+var statBlock: @SAstStatBlock
 end class
 
-+class SAstStatSwitch()
-	+var astStatBreakable: @SAstStatBreakable
++class SAstStatSwitch(@SAstStatBreakable)
 	+var cond: @SAstExpr
 	+var cases: list<kuin@Class> {TODO: 直すかも}
 	+var defaultStatBlock: @SAstStatBlock
 end class
 
-; シャポコ
-
 +class SAstStatCase(@SAstStat)
 	+var cond: list<kuin@Class> {TODO: 直すかも}
 end class
+
++class SAstStatWhile(@SAstStatSkipable)
+	+var cond: @SAstExpr
+	+var _skip: bool
+	+var stats: list<kuin@Class> {TODO: 書き直すかも}
+end class
+
++class SAstStatFor(@SAstStatSkipable)
+	+var start: @SAstExpr
+	+var cond: @SAstExpr
+	+var step: @SAstExpr
+	+var stats: list<@SAstStat>
+end class
+
++class SAstStatTry(@SAstStatBreakable)
+	+var statBlock: @SAstStatBlock
+	+var catches: list<kuin@Class> {TODO: 書き直すかも}
+	+var finallyStatBlock: @SAstStatBlock
+end class
+
++class SAstStatCatch(@SAstStat)
+	+var conds: list<kuin@Class> {TODO: 書き直すかも}
+	+var statBlock: @SAstStatBlock
+end class
+
++class SAstStatThrow(@SAstStat)
+	+var code: @SAstExpr
+end class
+
++class SAstStatBlock(@SAstStatBreakable)
+	+var stats: list<@SAstStat>
+end class
+
++class SAstStatRet(@SAstStat)
+	+var value: @SAstExpr
+end class
+
++class SAstStatDo(@SAstStat)
+	+var expr: @SAstExpr
+end class
+
++class SAstStatAssert(@SAstStat)
+	+var cond: @SAstExpr
+end class
+
++class SAstType(@SAst)
+end class
+
++class SAstTypeNullable(@SAstType)
+end class
+
++class SAstTypeArray(@SAstTypeNullable)
+	+var itemType: @SAstType
+end class
+
++class SAstTypeBit(@SAstType)
+	+var size: int
+end class
+
++class SAstTypeFuncArg()
+	+var arg: @SAstType
+	+var refVar: bool
+end class
+
++class SAstTypeFunc(@SAstTypeNullable)
+	+var funcAttr: @EFuncAttr
+	+var args: list<@SAstTypeFuncArg>
+	+var _ret: @SAstType
+end class
+
++enum EAstTypeGenKind
+	_list
+	_stack
+	_queue
+end enum
+
++class SAstTypeGen(@SAstTypeNullable)
+	+var kind: @EAstTypeGenKind
+	+var itemType: @SAstType
+end class
+
++class SAstTypeDict(@SAstTypeNullable)
+	+var astTypeNullable: @SAstTypeNullable
+	+var itemTypeKey: @SAstType
+	+var itemTypeValue: @SAstType
+end class
+
++enum EAstTypePrimKind
+	_int
+	_float
+	_char
+	_bool
+end enum
+
++class SAstTypePrim(@SAstType)
+	+var kind: @EAstTypePrimKind
+end class
+
++class SAstTypeUser(@SAstTypeNullable)
+end class
+
++class SAstTypeNull(@SAstType)
+end class
+
++class SAstTypeEnumElement(@SAstType)
+end class
+
++enum EAstExprVarKind
+	unknown
+	value
+	localVar
+	GlobalVar
+	RefVar
+end enum
+
++class SAstExpr(@SAst)
+	+var type: @SAstType
+	+var varKind: @EAstExprVarKind
+end class
+
++enum EAstExpr1Kind
+	plus
+	minus
+	not
+	copy
+	len
+end enum
+
++class SAstExpr1(@SAstExpr)
+	+var kind: @EAstExpr1Kind
+	+var child: @SAstExpr
+end class
+
++enum EAstExpr2Kind
+	assign
+	assignAdd
+	assignSub
+	assignMul
+	assignDiv
+	assignMod
+	assignPow
+	assignCat
+	or
+	and
+	lt
+	gt
+	le
+	ge
+	eq
+	nEq
+	eqRef
+	nEqRef
+	cat
+	add
+	sub
+	mul
+	div
+	mod
+	pow
+	swap
+end enum
+
++class SAstExpr2(@SAstExpr)
+	+var kind: @EAstExpr2Kind
+	+var child0: @SAstExpr
+	+var child1: @SAstExpr
+end class
+
++class SAstExpr3(@SAstExpr)
+	+var child0: @SAstExpr
+	+var child1: @SAstExpr
+	+var child2: @SAstExpr
+end class
+
++class SAstExprNew(@SAstExpr)
+	+var itemType: @SAstType
+	+var autoCreated: bool
+end class
+
++class SAstExprNewArray(@SAstExpr)
+	+var idces: list<kuin@Class> {TODO: 直すかも}
+	+var itemType: @SAstType
+end class
+
++enum EAstExprAsKind
+	as
+	is
+	nIs
+end enum
+
++class SAstExprAs(@SAstExpr)
+	+var kind: @EAstExprAsKind
+	+var child: @SAstExpr
+	+var childType: @SAstType
+end class
+
++class SAstExprToBin(@SAstExpr)
+	+var child: @SAstExpr
+	+var childType: @SAstType
+end class
+
++class SAstExprFromBin(@SAstExpr)
+	+var child: @SAstExpr
+	+var childType: @SAstType
+	+var offset: @SAstExpr
+end class
+
++class SAstExprCallArg(@SAstExpr)
+	+var refVar: bool
+	+var skipVar: @SAstArg
+end class
+
++class SAstExprCall(@SAstExpr)
+	+var _func: @SAstExpr
+	+var args: list<kuin@Class> {TODO: 直すかも}
+end class
+
++class SAstExprArray(@SAstExpr)
+	+var _var: @SAstExpr
+	+var idx: @SAstExpr
+end class
+
++class SAstExprDot(@SAstExpr)
+	+var _var: @SAstExpr
+	+var member: []char
+	+var classItem: @SAstClassItem {For caching to store class references.}
+end class
+
++class SAstExprValue(@SAstExpr)
+	+var value: int {TODO: 直すかも}
+end class
+
++class SAstExprValueArray(@SAstExpr)
+	+var values: list<kuin@Class>
+end class
+
+;
+; 公開関数
+;
+
++func isInt(type: @SAstType): bool
+	ret(type $ @SAst).typeId = %typePrim
+	|&(type $ @SAstTypePrim).kind = %_int
+end func
+
++func isFloat(type: @SAstType): bool
+	ret(type $ @SAst).typeId = %typePrim
+	|&(type $ @SAstTypePrim).kind = %_float
+end func
+
++func isBool(type: @SAstType): bool
+	ret(type $ @SAst).typeId = %typePrim
+	|&(type $ @SAstTypePrim).kind = %_bool
+end func
+
++func isChar(type: @SAstType): bool
+	ret(type $ @SAst).typeId = %typePrim
+	|&(type $ @SAstTypePrim).kind = %_char
+end func
+
++func isRef(type: @SAstType): bool
+	var type_id: @EAstTypeId :: (type $ @SAst).typeId
+	ret type_id = %typeArray
+	||type_id = %typeGen
+	||type_id = %typeDict
+	||@isClass(type)
+end func
+
++func isNullable(type: @SAstType): bool
+	var type_id: @EAstTypeId :: (type $ @SAst).typeId
+	ret(type_id.and(%typeNullable) <> (0 $ @EAstTypeId))
+	|&!((type $ @SAst).typeId = %typeUser)
+	|&((type $ @SAst).refItem.typeId = %_enum)
+end func
+
++func isClass(type: @SAstType): bool
+	ret type.typeId = %typeUser & type.refItem.typeId = %_class
+end func
+
++func isEnum(type: @SAstType): bool
+	ret type.typeId = %typeUser
+	|&type.refItem.typeId = %_enum
+end func
+
++func isStr(type: @SAstType): bool
+	ret type.typeId = %typeArray
+	|&(type $ @SAstTypeArray).itemType.typeId = %typePrim
+	|&((type $ @SAstTypeArray).itemType $ @SAstTypePrim).kind = %_char
+end func
+
++func dump1(path: []char, ast: @SAst)
+	do @tab :: 0
+	do @filePtr :: file@makeWriter(path, false)
+	do @filePtr.writeStr("<?xml version = \"1.0\" encoding=\"UTF-8\"?>\n")
+	do @filePtr.writeStr("<Dump1>\n")
+	do @tab :+ 1
+	do @dumpRecursion(ast)
+	if(@tab <> 1)
+		throw 1
+	end if
+	do @dumpScope("Scope", ast)
+	do @tab :- 1
+	do @filePtr.writeStr("</Dump1>\n")
+	do @filePtr.fin()
+end func
+
++func getTypeName(ast: @SAstType): []char
+	var res: []char
+	if(ast =& null)
+		throw 1
+	end if
+	switch(ast.typeId)
+	case %typeArray
+		ret "[]" ~ @getTypeName((ast $ @SAstTypeArray).itemType)
+	case %typeBit
+		ret "bit" ~ ((ast $ @SAstTypeBit).size * 8).toStr()
+	case %typeFunc
+		var astFunc: @SAstTypeFunc :: ast $ @SAstTypeFunc
+		var argsFunc: list<@SAstTypeFuncArg> :: astFunc.args
+		do res :: "func<("
+		do argsFunc.head()
+		while(argsFunc.term())
+			do res :: res ~ (argsFunc.termOffset(-1) ?("", ", "))
+			do res :: res ~ ((argsFunc.get().refVar) ?("&", ""))
+			do res :: res ~ @getTypeName(argsFunc.get().arg)
+			do argsFunc.next()
+		end while
+		if(astFunc._ret =& null)
+			do res :: res ~ ")>"
+		else
+			do res :: res ~ "): " ~ @getTypeName(astFunc._ret) ~ ">"
+		end if
+		ret res
+	case %typeGen
+		var astGen: @SAstTypeGen :: ast $ @SAstTypeGen
+		switch(astGen.kind)
+		case %_list
+			do res :: "list<"
+		case %_stack
+			do res :: "stack<"
+		case %_queue
+			do res :: "queue<"
+		default
+			throw 1
+		end switch
+		ret res ~ @getTypeName(astGen.itemType) ~ ">"
+	case %typeDict
+		var astDict: @SAstTypeDict :: ast $ @SAstTypeDict
+		ret "dict<" ~ @getTypeName(astDict.itemTypeKey) ~ ", "
+		|~@getTypeName(astDict.itemTypeValue) ~ ">"
+	case %typePrim
+		var astPrim: @SAstTypePrim :: ast $ @SAstTypePrim
+		switch(astPrim.kind)
+		case %_int
+			ret "int"
+		case %_float
+			ret "float"
+		case %_char
+			ret "char"
+		case %_bool
+			ret "bool"
+		default
+			throw 1
+			ret ""
+		end switch
+	case %typeUser
+		var astUser: @SAst :: ast $ @SAst
+		ret((astUser.refName[0] = '@') ?(astUser.pos.srcName, ""))
+		|~astUser.refName
+	case %typeEnumElement
+		ret "(Unknown type)"
+	end switch
+end func
+
+;
+; ヘルパー関数
+;
+
+var filePtr: file@Writer
+var tab: int
+
+func printAst(tag: []char, ast: @SAst)
+	do @printTab()
+	do @filePtr.writeStr("<\{tag}>\n")
+	do @tab :+ 1
+	do @dumpRecursion(ast)
+	do @tab :- 1
+	do @printTab()
+	do @filePtr.writeStr("</\{tag}>\n")
+end func
+
+func printTab()
+	for i(0, @tab - 1)
+		do @filePtr.writeChar(' ')
+	end for
+end func
+
+func printAstList(tag: []char, _list: list<@SAst>)
+	do @printTab()
+	do @filePtr.writeStr("<\{tag}>\n")
+	do @tab :+ 1
+	do _list.head()
+	while(!_list.term())
+		do @dumpRecursion(
+	end while
+end func
 
 func main()
 	

@@ -2,5 +2,8 @@
 ;   Kuinリポジトリのsrc/compiler/asm.h, asm.cに対応
 ;
 
-+class SAsmLabel()
++class SAsm()
+end class
+
++class SAsmLabel(@SAsm)
 end class
