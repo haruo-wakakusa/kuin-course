@@ -1,0 +1,105 @@
+; parse.kn
+;
+
+const reserved: [][]char :: [
+|"alias",
+|"assert",
+|"bit16",
+|"bit32",
+|"bit64",
+|"bit8",
+|"block",
+|"bool",
+|"break",
+|"case",
+|"catch",
+|"char",
+|"class",
+|"const",
+|"dbg",
+|"default",
+|"dict",
+|"do",
+|"elif",
+|"else",
+|"end",
+|"enum",
+|"false",
+|"finally",
+|"float",
+|"for",
+|"func",
+|"if",
+|"include",
+|"inf",
+|"int",
+|"list",
+|"me",
+|"null",
+|"queue",
+|"ret",
+|"skip",
+|"stack",
+|"super",
+|"switch",
+|"throw",
+|"to",
+|"true",
+|"try",
+|"var",
+|"while"]
+
+enum ECharColor
+	none
+	identifier
+	global
+	reserved
+	number
+	str
+	_char
+	lineComment
+	comment
+	symbol
+	err
+end enum
+
+enum EAlignmentToken
+	none :: 0x01
+	value :: 0x02
+	ope2 :: 0x04
+	pr :: 0x08
+	comma :: 0x10
+end enum
+
+class SKeywordListItem()
+	+var name: []char
+	+var ast: \ast@SAst
+	+var first: lib@Int
+	+var last: lib@Int
+end class
+
+class SKeywordTypeList()
+	+var next: @SKeywordTypeList
+	+var type: []char
+end class
+
+
+
+func main()
+	
+end func
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

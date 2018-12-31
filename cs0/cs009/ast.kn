@@ -83,7 +83,7 @@ end enum
 end class
 
 +class SAstRoot(@SAst)
-	+var items: list<@SAst>
+	+var items: list<kuin@Class>
 end class
 
 +enum EFuncAttr
@@ -106,22 +106,22 @@ end class
 end enum
 
 +class SAstFunc(@SAst)
-	+var addrTop: int {TODO: 直すかも}
+	+var addrTop: lib@Int
 	+var addrBottom: int
 	+var posRowBottom: int
 	+var dllName: []char
 	+var dllFuncName: []char
 	+var funcAttr: @EFuncAttr
-	+var args: list<kuin@Class> {TODO: 直すかも}
+	+var args: list<kuin@Class>
 	+var _ret: @SAstType
-	+var stats: list<kuin@Class> {TODO: 直すかも}
+	+var stats: list<kuin@Class>
 	+var retPoint: \asm@SAsmLabel
 end class
 
 +class SAstFuncRaw(@SAstFunc)
-	+var asms: list<kuin@Class> {TODO: 直すかも}
+	+var asms: list<kuin@Class>
 	+var argNum: int
-	+var header: list<kuin@Class> {TODO: 直すかも}
+	+var header: list<kuin@Class>
 end class
 
 +class SAstVar(@SAst)
@@ -145,15 +145,15 @@ end class
 end class
 
 +class SAstClass(@SAst)
-	+var addr: int {TODO: 直すかも}
+	+var addr: lib@Int
 	+var varSize: int
 	+var funcSize: int
-	+var items: list<kuin@Class> {TODO: 直すかも}
+	+var items: list<kuin@Class>
 	+var indirectCreation: bool
 end class
 
 +class SAstEnum(@SAst)
-	+var items: list<kuin@Class> {TODO: 直すかも}
+	+var items: list<kuin@Class>
 end class
 
 +enum EAstArgKind
@@ -166,7 +166,7 @@ end class
 end enum
 
 +class SAstArg(@SAst)
-	+var addr: int {TODO: 直すかも}
+	+var addr: lib@Int
 	+var kind: @EAstArgKind
 	+var refVar: bool
 	+var type: @SAstType
@@ -215,7 +215,7 @@ end class
 +class SAstStatIf(@SAstStatBreakable)
 	+var cond: @SAstExpr
 	+var statBlock: @SAstStatBlock
-	+var elIfs: list<kuin@Class> {TODO: 直すかも}
+	+var elIfs: list<kuin@Class>
 	+var elseStatBlock: @SAstStatBlock
 end class
 
@@ -226,35 +226,36 @@ end class
 
 +class SAstStatSwitch(@SAstStatBreakable)
 	+var cond: @SAstExpr
-	+var cases: list<kuin@Class> {TODO: 直すかも}
+	+var cases: list<kuin@Class>
 	+var defaultStatBlock: @SAstStatBlock
 end class
 
 +class SAstStatCase(@SAstStat)
-	+var cond: list<kuin@Class> {TODO: 直すかも}
+	+var conds: list<[]kuin@Class> {TODO: SAstExpr[]と思われ}
+	+var statBlock: @SAstStatBlock
 end class
 
 +class SAstStatWhile(@SAstStatSkipable)
 	+var cond: @SAstExpr
 	+var _skip: bool
-	+var stats: list<kuin@Class> {TODO: 書き直すかも}
+	+var stats: list<kuin@Class>
 end class
 
 +class SAstStatFor(@SAstStatSkipable)
 	+var start: @SAstExpr
 	+var cond: @SAstExpr
 	+var step: @SAstExpr
-	+var stats: list<@SAstStat>
+	+var stats: list<kuin@Class>
 end class
 
 +class SAstStatTry(@SAstStatBreakable)
 	+var statBlock: @SAstStatBlock
-	+var catches: list<kuin@Class> {TODO: 書き直すかも}
+	+var catches: list<kuin@Class>
 	+var finallyStatBlock: @SAstStatBlock
 end class
 
 +class SAstStatCatch(@SAstStat)
-	+var conds: list<kuin@Class> {TODO: 書き直すかも}
+	+var conds: list<[]kuin@Class>
 	+var statBlock: @SAstStatBlock
 end class
 
@@ -263,7 +264,7 @@ end class
 end class
 
 +class SAstStatBlock(@SAstStatBreakable)
-	+var stats: list<@SAstStat>
+	+var stats: list<kuin@Class>
 end class
 
 +class SAstStatRet(@SAstStat)
@@ -299,7 +300,7 @@ end class
 
 +class SAstTypeFunc(@SAstTypeNullable)
 	+var funcAttr: @EFuncAttr
-	+var args: list<@SAstTypeFuncArg>
+	+var args: list<kuin@Class>
 	+var _ret: @SAstType
 end class
 
@@ -344,8 +345,8 @@ end class
 	unknown
 	value
 	localVar
-	GlobalVar
-	RefVar
+	globalVar
+	refVar
 end enum
 
 +class SAstExpr(@SAst)
@@ -413,7 +414,7 @@ end class
 end class
 
 +class SAstExprNewArray(@SAstExpr)
-	+var idces: list<kuin@Class> {TODO: 直すかも}
+	+var idces: list<kuin@Class>
 	+var itemType: @SAstType
 end class
 
@@ -447,7 +448,7 @@ end class
 
 +class SAstExprCall(@SAstExpr)
 	+var _func: @SAstExpr
-	+var args: list<kuin@Class> {TODO: 直すかも}
+	+var args: list<kuin@Class>
 end class
 
 +class SAstExprArray(@SAstExpr)
@@ -551,13 +552,14 @@ end func
 		ret "bit" ~ ((ast $ @SAstTypeBit).size * 8).toStr()
 	case %typeFunc
 		var astFunc: @SAstTypeFunc :: ast $ @SAstTypeFunc
-		var argsFunc: list<@SAstTypeFuncArg> :: astFunc.args
+		var argsFunc: list<kuin@Class> :: astFunc.args
 		do res :: "func<("
 		do argsFunc.head()
 		while(argsFunc.term())
+			var arg: @SAstTypeFuncArg :: argsFunc.get() $ @SAstTypeFuncArg
 			do res :: res ~ (argsFunc.termOffset(-1) ?("", ", "))
-			do res :: res ~ ((argsFunc.get().refVar) ?("&", ""))
-			do res :: res ~ @getTypeName(argsFunc.get().arg)
+			do res :: res ~ (arg.refVar ?("&", ""))
+			do res :: res ~ @getTypeName(arg.arg)
 			do argsFunc.next()
 		end while
 		if(astFunc._ret =& null)
@@ -630,16 +632,964 @@ func printTab()
 	end for
 end func
 
-func printAstList(tag: []char, _list: list<@SAst>)
+func printAstList(tag: []char, _list: list<kuin@Class>)
 	do @printTab()
 	do @filePtr.writeStr("<\{tag}>\n")
 	do @tab :+ 1
 	do _list.head()
 	while(!_list.term())
-		do @dumpRecursion(
+		do @dumpRecursion(_list.get() $ @SAst)
+		do _list.next()
 	end while
+	do @tab :- 1
+	do @printTab()
+	do @filePtr.writeStr("</\{tag}>\n")
 end func
 
-func main()
+func dumpRecursion(ast: @SAst)
+	if(ast =& null)
+		ret
+	end if
+	switch(ast.typeId)
+	case %ast
+		do @dumpAst(ast)
+	case %root
+		do @dumpAstRoot(ast $ @SAstRoot)
+	case %_func
+		do @dumpAstFunc(ast $ @SAstFunc)
+	case %funcRaw
+		do @dumpAstFuncRaw(ast $ @SAstFuncRaw)
+	case %_var
+		do @dumpAstVar(ast $ @SAstVar)
+	case %_const
+		do @dumpAstConst(ast $ @SAstConst)
+	case %_alias
+		do @dumpAstAlias(ast $ @SAstAlias)
+	case %_class
+		do @dumpAstClass(ast $ @SAstClass)
+	case %_enum
+		do @dumpAstEnum(ast $ @SAstEnum)
+	case %arg
+		do @dumpAstArg(ast $ @SAstArg)
+	case %stat
+		throw 1
+	case %statBreakable
+		do @dumpAstStatBreakable(ast $ @SAstStatBreakable)
+	case %statSkipable
+		do @dumpAstStatSkipable(ast $ @SAstStatSkipable)
+	case %statEnd
+		throw 1
+	case %statFunc
+		do @dumpAstStatFunc(ast $ @SAstStatFunc)
+	case %statVar
+		do @dumpAstStatVar(ast $ @SAstStatVar)
+	case %statConst
+		do @dumpAstStatConst(ast $ @SAstStatConst)
+	case %statAlias
+		do @dumpAstStatAlias(ast $ @SAstStatAlias)
+	case %statClass
+		do @dumpAstStatClass(ast $ @SAstStatClass)
+	case %statEnum
+		do @dumpAstStatEnum(ast $ @SAstStatEnum)
+	case %statIf
+		do @dumpAstStatIf(ast $ @SAstStatIf)
+	case %statElIf
+		do @dumpAstStatElIf(ast $ @SAstStatElIf)
+	case %statElse
+		throw 1
+	case %statSwitch
+		do @dumpAstStatSwitch(ast $ @SAstStatSwitch)
+	case %statCase
+		do @dumpAstStatCase(ast $ @SAstStatCase)
+	case %statDefault
+		throw 1
+	case %statWhile
+		do @dumpAstStatWhile(ast $ @SAstStatWhile)
+	case %statFor
+		do @dumpAstStatFor(ast $ @SAstStatFor)
+	case %statTry
+		do @dumpAstStatTry(ast $ @SAstStatTry)
+	case %statCatch
+		do @dumpAstStatCatch(ast $ @SAstStatCatch)
+	case %statFinally
+		throw 1
+	case %statThrow
+		do @dumpAstStatThrow(ast $ @SAstStatThrow)
+	case %statBlock
+		do @dumpAstStatBlock(ast $ @SAstStatBlock)
+	case %statRet
+		do @dumpAstStatRet(ast $ @SAstStatRet)
+	case %statDo
+		do @dumpAstStatDo(ast $ @SAstStatDo)
+	case %statBreak
+		do @dumpAstStatBreak(ast $ @SAstStat)
+	case %statSkip
+		do @dumpAstStatSkip(ast $ @SAstStat)
+	case %statAssert
+		do @dumpAstStatAssert(ast $ @SAstStatAssert)
+	case %type
+		throw 1
+	case %typeNullable
+		throw 1
+	case %typeArray
+		do @dumpAstTypeArray(ast $ @SAstTypeArray)
+	case %typeBit
+		do @dumpAstTypeBit(ast $ @SAstTypeBit)
+	case %typeFunc
+		do @dumpAstTypeFunc(ast $ @SAstTypeFunc)
+	case %typeGen
+		do @dumpAstTypeGen(ast $ @SAstTypeGen)
+	case %typeDict
+		do @dumpAstTypeDict(ast $ @SAstTypeDict)
+	case %typePrim
+		do @dumpAstTypePrim(ast $ @SAstTypePrim)
+	case %typeUser
+		do @dumpAstTypeUser(ast $ @SAstTypeUser)
+	case %typeNull
+		do @dumpAstTypeNull(ast $ @SAstTypeNull)
+	case %typeEnumElement
+		do @dumpAstTypeEnumElement(ast $ @SAstTypeEnumElement)
+	case %expr
+		throw 1
+	case %expr1
+		do @dumpAstExpr1(ast $ @SAstExpr1)
+	case %expr2
+		do @dumpAstExpr2(ast $ @SAstExpr2)
+	case %expr3
+		do @dumpAstExpr3(ast $ @SAstExpr3)
+	case %exprNew
+		do @dumpAstExprNew(ast $ @SAstExprNew)
+	case %exprNewArray
+		do @dumpAstExprNewArray(ast $ @SAstExprNewArray)
+	case %exprAs
+		do @dumpAstExprAs(ast $ @SAstExprAs)
+	case %exprToBin
+		do @dumpAstExprToBin(ast $ @SAstExprToBin)
+	case %exprFromBin
+		do @dumpAstExprFromBin(ast $ @SAstExprFromBin)
+	case %exprCall
+		do @dumpAstExprCall(ast $ @SAstExprCall)
+	case %exprArray
+		do @dumpAstExprArray(ast $ @SAstExprArray)
+	case %exprDot
+		do @dumpAstExprDot(ast $ @SAstExprDot)
+	case %exprValue
+		do @dumpAstExprValue(ast $ @SAstExprValue)
+	case %exprValueArray
+		do @dumpAstExprValueArray(ast $ @SAstExprValueArray)
+	case %exprRef
+		do @dumpAstExprRef(ast $ @SAstExpr)
+	default
+		throw 1
+	end switch
+end func
+
+func pProperty(str: []char, s: []char)
+	do @filePtr.writeStr(" \{str}=\"\{s}\"")
+end func
+
+func pNullOrPtr(str: []char, b: bool)
+	var res: []char :: b ?("(Null)", "(Ptr)")
+	do @filePtr.writeStr(" \{str}=\"\{res}\"")
+end func
+
+func pNullOrStr(str: []char, s: []char)
+	var res: []char :: (s =& null) ?("Null", s)
+	do @filePtr.writeStr(" \{str}=\"\{res}\"")
+end func
+
+func pTrueOrFalse(str: []char, b: bool)
+	var res: []char :: b ?("True", "False")
+	do @filePtr.writeStr(" \{str}=\"\{res}\"")
+end func
+
+func p(str: []char)
+	do @filePtr.writeStr(str)
+end func
+
+func pOpening(tabname: []char)
+	do @printTab()
+	do @p("<\{tabname}>\n")
+	do @tab :+ 1
+end func
+
+func pClosing(tabname: []char)
+	do @tab :+ 1
+	do @p("</\{tabname}>\n")
+	do @printTab()
+end func
+
+func dumpAst(ast: @SAst)
+	do @printTab()
+	do @filePtr.writeStr("<Ast")
+	var srcName: []char :: ast.pos.srcName
+	var row: []char :: ast.pos.row.toStr()
+	var col: []char :: ast.pos.col.toStr()
+	do @filePtr.writeStr(" Pos=\"\{srcName}: \{row}, \{col}\"")
+	var name: []char :: (ast.name =& null) ?("(Null)", ast.name)
+	do @filePtr.writeStr(" Name=\"\{name}\"")
+	do @pNullOrPtr("ScopeParent", ast.scopeParent =& null)
+	do @pNullOrPtr("ScopeChildren", ast.scopeChildren =& null)
+	do @pNullOrPtr("ScopeRefedItems", ast.scopeRefedItems =& null)
+	do @pNullOrStr("RefName", ast.refName)
+	do @pNullOrPtr("RefItem", ast.refItem =& null)
+	do @pNullOrPtr("AnalyzedCache", ast.analyzedCache =& null)
+	var public: []char :: ast.public ?("True", "False")
+	do @filePtr.writeStr(" Public=\"\{public}\"")
+	do @filePtr.writeStr(" />\n")
+end func
+
+func dumpAstRoot(ast: @SAstRoot)
+	do @pOpening("Root")
+	do @dumpAst(ast)
+	do @printAstList("Root_Items", ast.items)
+	do @pClosing("Root")
+end func
+
+func dumpAstFunc(ast: @SAstFunc)
+	do @printTab()
+	do @p("<Func")
+	do @pNullOrStr("DllName", ast.dllName)
+	do @pNullOrStr("DllFuncName", ast.dllFuncName)
+	do @p((ast.funcAttr $ int).toStrFmt("016X"))
+	do @p(">\n")
+	do @tab :+ 1
+	do @dumpAst(ast)
+	assert(ast.addrTop =& null & ast.addrTop.value = -1)
+	assert(ast.retPoint =& null)
+	do @printAstList("Func_Args", ast.args)
+	if(ast._ret =& null)
+		do @printAst("Func_Ret", ast._ret)
+	end if
+	do @printAstList("Func_Stats", ast.stats)
+	do @tab :- 1
+	do @printTab()
+	do @p("</Func>\n")
+end func
+
+func dumpAstFuncRaw(ast: @SAstFuncRaw)
+	do @printTab()
+	do @p("<FuncRaw>\n")
+	do @tab :+ 1
+	do @dumpAstFunc(ast)
+	do @tab :- 1
+	do @printTab()
+	do @p("</FuncRaw>\n")
+end func
+
+func dumpAstVar(ast: @SAstVar)
+	do @printTab()
+	do @p("<Var>\n")
+	do @tab :+ 1
+	do @dumpAst(ast)
+	do @printAst("Var_Var", ast._var)
+	do @tab :- 1
+	do @printTab()
+	do @p("</Var>\n")
+end func
+
+func dumpAstConst(ast: @SAstConst)
+	do @printTab()
+	do @p("<Const>\n")
+	do @tab :+ 1
+	do @dumpAst(ast)
+	do @printAst("Const_Var", ast._var)
+	do @tab :- 1
+	do @printTab()
+	do @p("</Const>\n")
+end func
+
+func dumpAstAlias(ast: @SAstAlias)
+	do @printTab()
+	do @p("<Alias>\n")
+	do @tab :+ 1
+	do @dumpAst(ast)
+	do @printAst("Alias_Type", ast.type)
+	do @tab :- 1
+	do @printTab()
+	do @p("</Alias>\n")
+end func
+
+func dumpAstClass(ast: @SAstClass)
+	do @printTab()
+	do @p("<Class")
+	assert(ast.addr <>& null & ast.addr.value = -1)
 	
+end func
+
+func dumpAstEnum(ast: @SAstEnum)
+	do @printTab()
+	do @p("<Enum>\n")
+	do @tab :+ 1
+	do @dumpAst(ast)
+	do @printAstList("Enum_Items", ast.items)
+	do @tab :- 1
+	do @printTab()
+	do @p("</Enum>\n")
+end func
+
+func dumpAstArg(ast: @SAstArg)
+	do @printTab()
+	do @p("<Arg Kind=\"")
+	switch(ast.kind)
+	case %unknown
+		do @p("Unknown")
+	case %global
+		do @p("Global")
+	case %localArg
+		do @p("LocalArg")
+	case %localVar
+		do @p("LocalVar")
+	case %_const
+		do @p("Const")
+	case %member
+		do @p("Member")
+	default
+		assert false
+	end switch
+	do @p("\"")
+	do @pTrueOrFalse("RefVar", ast.refVar)
+	do @p(">\n")
+	assert(ast.addr <>& null & ast.addr.value = -1)
+	do @tab :+ 1
+	do @dumpAst(ast)
+	if(ast.type <>& null)
+		do @printAst("Arg_Type", ast.type)
+	end if
+	if(ast.expr <>& null)
+		do @printAst("Arg_Expr", ast.expr)
+	end if
+	do @tab :- 1
+	do @printTab()
+	do @p("</Arg>\n")
+end func
+
+func dumpAstStat(ast: @SAstStat)
+	do @pOpening("Stat")
+	do @dumpAst(ast)
+	do @pClosing("Stat")
+end func
+
+func dumpAstStatBreakable(ast: @SAstStatBreakable)
+	do @pOpening("StatBreakable")
+	do @dumpAstStat(ast)
+	if(ast.blockVar <>& null)
+		do @printAst("StatBreakable_BlockVar", ast.blockVar)
+	end if
+	do @pClosing("StatBreakable")
+end func
+
+func dumpAstStatSkipable(ast: @SAstStatSkipable)
+	do @pOpening("StatSkipable")
+	assert(ast.skipPoint <>& null)
+	do @dumpAstStatBreakable(ast)
+	do @pClosing("StatSkipable")
+end func
+
+func dumpAstStatFunc(ast: @SAstStatFunc)
+	do @pOpening("StatFunc")
+	do @dumpAstStat(ast)
+	do @printAst("StatFunc_Def", ast.def)
+	do @pClosing("StatFunc")
+end func
+
+func dumpAstStatVar(ast: @SAstStatVar)
+	do @pOpening("StatVar")
+	do @dumpAstStat(ast)
+	do @printAst("StatVar_Def", ast.def)
+	do @pClosing("StatVar")
+end func
+
+func dumpAstStatConst(ast: @SAstStatConst)
+	do @pOpening("StatConst")
+	do @dumpAstStat(ast)
+	do @printAst("StatConst_Def", ast.def)
+	do @pClosing("StatConst")
+end func
+
+func dumpAstStatAlias(ast: @SAstStatAlias)
+	do @pOpening("StatAlias")
+	do @dumpAstStat(ast)
+	do @printAst("StatAlias_Def", ast.def)
+	do @pClosing("StatAlias")
+end func
+
+func dumpAstStatClass(ast: @SAstStatClass)
+	do @pOpening("StatClass")
+	do @dumpAstStat(ast)
+	do @printAst("StatClass_Def", ast.def)
+	do @pClosing("StatClass")
+end func
+
+func dumpAstStatEnum(ast: @SAstStatEnum)
+	do @pOpening("StatEnum")
+	do @dumpAstStat(ast)
+	do @printAst("StatEnum_Def", ast.def)
+	do @pClosing("StatEnum")
+end func
+
+func dumpAstStatIf(ast: @SAstStatIf)
+	do @pOpening("StatIf")
+	do @dumpAstStatBreakable(ast)
+	if(ast.cond <>& null)
+		do @printAst("StatIf_Cond", ast.cond)
+	end if
+	do @printAst("StatIf_StatBlock", ast.statBlock)
+	do @printAstList("StatIf_ElIfs", ast.elIfs)
+	if(ast.elseStatBlock <>& null)
+		do @printAst("StatIf_ElseStatBlock", ast.elseStatBlock)
+	end if
+	do @pClosing("StatIf")
+end func
+
+func dumpAstStatElIf(ast: @SAstStatElIf)
+	do @pOpening("StatElIf")
+	do @dumpAstStat(ast)
+	do @printAst("StatElIf_Cond", ast.cond)
+	do @printAst("StatElIf_StatBlock", ast.statBlock)
+	do @pClosing("StatElIf")
+end func
+
+func dumpAstStatSwitch(ast: @SAstStatSwitch)
+	do @pOpening("StatSwitch")
+	do @dumpAstStatBreakable(ast)
+	do @printAst("StatSwitch_Cond", ast.cond)
+	do @printAstList("StatSwitch_Cases", ast.cases)
+	if(ast.defaultStatBlock <>& null)
+		do @printAst("StatSwitch_DefaultStatBlock", ast.defaultStatBlock)
+	end if
+	do @pClosing("StatSwitch")
+end func
+
+func dumpAstStatCase(ast: @SAstStatCase)
+	do @pOpening("StatCase")
+	do @dumpAstStat(ast)
+	do @pOpening("StatCase_Conds")
+	do ast.conds.head()
+	while(!ast.conds.term())
+		var exprs: []kuin@Class :: ast.conds.get()
+		do @pOpening("StatCase_1")
+		do @dumpRecursion(exprs[0] $ @SAstExpr)
+		do @pClosing("StatCase_1")
+		if(exprs[1] <>& null)
+			do @pOpening("StatCase_2")
+			do @dumpRecursion(exprs[1])
+			do @pClosing("StatCase_2")
+		end if
+		do ast.conds.next()
+	end while
+	do @pClosing("StatCase_Conds")
+	do @printAst("StatCase_StatBlock", ast.statBlock)
+	do @pClosing("StatCase")
+end func
+
+func dumpAstStatWhile(ast: @SAstStatWhile)
+	do @p("<StatWhile")
+	do @pTrueOrFalse("Skip", ast._skip)
+	do @p(">\n")
+	do @tab :+ 1
+	do @dumpAstStatWhile(ast)
+	do @printAst("StatWhile_Cond", ast.cond)
+	do @printAstList("StatWhile_Stats", ast.stats)
+	do @pClosing("StatWhile")
+end func
+
+func dumpAstStatFor(ast: @SAstStatFor)
+	do @pOpening("StatFor")
+	do @dumpAstStatSkipable(ast)
+	do @printAst("StatFor_Start", ast.start)
+	do @printAst("StatFor_Cond", ast.cond)
+	do @printAst("StatFor_Step", ast.step)
+	do @pClosing("StatFor")
+end func
+
+func dumpAstStatTry(ast: @SAstStatTry)
+	do @pOpening("StatTry")
+	do @dumpAstStatBreakable(ast)
+	do @printAst("StatTry_StatBlock", ast.statBlock)
+	do @printAstList("StatTry_Catches", ast.catches)
+	if(ast.finallyStatBlock <>& null)
+		do @printAst("StatTry_FinallyStatBlock", ast.finallyStatBlock)
+	end if
+	do @pClosing("StatTry")
+end func
+
+func dumpAstStatCatch(ast: @SAstStatCatch)
+	do @pOpening("StatCatch")
+	do @dumpAstStat(ast)
+	do @pOpening("StatCatch_Conds")
+	do ast.conds.head()
+	while(!ast.conds.term())
+		var exprs: []kuin@Class :: ast.conds.get()
+		do @pOpening("StatCatch_1")
+		do @dumpRecursion(exprs[0] $ @SAst)
+		do @pClosing("StatCatch_1")
+		do @printTab()
+		do @p("<StatCatch_2>\n")
+		if(exprs[1] <>& null)
+			do @tab :+ 1
+			do @dumpRecursion(exprs[1] $ @SAst)
+			do @tab :- 1
+		end if
+		do @printTab()
+		do @p("</StatCatch_2>\n")
+		do ast.conds.next()
+	end while
+	do @pClosing("StatCatch_Conds")
+	do @pClosing("StatCatch_Catch")
+end func
+
+func dumpAstStatThrow(ast: @SAstStatThrow)
+	do @pOpening("StatThrow")
+	do @dumpAstStat(ast)
+	do @printAst("StatThrow_Code", ast.code)
+	do @pClosing("StatThrow")
+end func
+
+func dumpAstStatBlock(ast: @SAstStatBlock)
+	do @pOpening("StatBlock")
+	do @dumpAstStatBreakable(ast)
+	do @printAstList("StatBlock_Stats", ast.stats)
+	do @pClosing("StatBlock")
+end func
+
+func dumpAstStatRet(ast: @SAstStatRet)
+	do @printTab()
+	do @p("StatRet")
+	if(ast.value <>& null)
+		do @tab :+ 1
+		do @dumpAstStat(ast)
+		do @printAst("StatRet_Value", ast.value)
+		do @tab :- 1
+	end if
+	do @printTab()
+	do @pClosing("</StatRet>\n")
+end func
+
+func dumpAstStatDo(ast: @SAstStatDo)
+	do @pOpening("StatDo")
+	do @dumpAstStat(ast)
+	do @printAst("StatDo_Expr", ast.expr)
+	do @pClosing("StatDo")
+end func
+
+func dumpAstStatBreak(ast: @SAstStat)
+	do @pOpening("StatBreak")
+	do @dumpAstStat(ast)
+	do @pClosing("StatBreak")
+end func
+
+func dumpAstStatSkip(ast: @SAstStat)
+	do @pOpening("StatSkip")
+	do @dumpAstStat(ast)
+	do @pClosing("StatSkip")
+end func
+
+func dumpAstStatAssert(ast: @SAstStatAssert)
+	do @pOpening("StatAssert")
+	do @dumpAstStat(ast)
+	do @printAst("StatAssert_Cond", ast.cond)
+	do @pClosing("StatAssert")
+end func
+
+func dumpAstType(ast: @SAstType)
+	do @pOpening("Type")
+	do @dumpAst(ast)
+	do @pClosing("Type")
+end func
+
+func dumpAstTypeNullable(ast: @SAstTypeNullable)
+	do @pOpening("TypeNullable")
+	do @tab :+ 1
+	do @dumpAstType(ast)
+	do @pClosing("TypeNullable")
+end func
+
+func dumpAstTypeArray(ast: @SAstTypeArray)
+	do @pOpening("TypeArray")
+	do @dumpAstTypeNullable(ast)
+	do @printAst("TypeArray_ItemType", ast.itemType)
+	do @pClosing("TypeArray")
+end func
+
+func dumpAstTypeBit(ast: @SAstTypeBit)
+	do @printTab()
+	do @p("<TypeBit")
+	do @pProperty("Size", ast.size.toStr())
+	do @p(">\n")
+	do @tab :+ 1
+	do @dumpAstType(ast)
+	do @tab :- 1
+	do @pClosing("TypeBit")
+end func
+
+func dumpAstTypeFunc(ast: @SAstTypeFunc)
+	do @pOpening("TypeFunc")
+	do ast.args.head()
+	while(!ast.args.term())
+		var arg: @SAstTypeFuncArg :: ast.args.get() $ @SAstTypeFuncArg
+		do @printTab()
+		do @p("<TypeFunc_Arg")
+		do @pTrueOrFalse("RefVar", arg.refVar)
+		do @p(">\n")
+		do @tab :+ 1
+		do @dumpRecursion(arg.arg)
+		do @tab :- 1
+		do @pClosing("TypeFunc_Arg")
+		do ast.args.next()
+	end while
+	do @pClosing("TypeFunc_Args")
+	if(ast._ret <>& null)
+		do @printAst("TypeFunc_Ret", ast._ret)
+	end if
+	do @pClosing("TypeFunc")
+end func
+
+func dumpAstTypeGen(ast: @SAstTypeGen)
+	do @printTab()
+	do @p("<TypeGen")
+	do @p(" Kind=\"")
+	switch(ast.kind)
+	case %_list
+		do @p("List")
+	case %_stack
+		do @p("Stack")
+	case %_queue
+		do @p("Queue")
+	default
+		assert false
+	end switch
+	do @p("\">\n")
+	do @tab :+ 1
+	do @dumpAstTypeNullable(ast)
+	do @printAst("TypeGen_ItemType", ast.itemType)
+	do @tab :- 1
+	do @pClosing("TypeGen")
+end func
+
+func dumpAstTypeDict(ast: @SAstTypeDict)
+	do @pOpening("TypeDict")
+	do @dumpAstTypeNullable(ast)
+	do @printAst("TypeDict_ItemTypeKey", ast.itemTypeKey)
+	do @printAst("TypeDict_ItemTypeValue", ast.itemTypeValue)
+end func
+
+func dumpAstTypePrim(ast: @SAstTypePrim)
+	do @printTab()
+	do @p("<TypePrim")
+	do @p(" Kind=\"")
+	switch(ast.kind)
+	case %_int
+		do @p("Int")
+	case %_float
+		do @p("Float")
+	case %_char
+		do @p("Char")
+	case %_bool
+		do @p("Bool")
+	default
+		assert false
+	end switch
+	do @p("\">\n")
+	do @tab :+ 1
+	do @dumpAstType(ast)
+	do @pClosing("TypePrim")
+end func
+
+func dumpAstTypeUser(ast: @SAstTypeUser)
+	do @pOpening("TypeUser")
+	do @dumpAstTypeNullable(ast)
+	do @pClosing("TypeUser")
+end func
+
+func dumpAstTypeNull(ast: @SAstTypeNull)
+	do @pOpening("TypeNull")
+	do @dumpAstType(ast)
+	do @pClosing("TypeNull")
+end func
+
+func dumpAstTypeEnumElement(ast: @SAstTypeEnumElement)
+	do @pOpening("TypeEnumElement")
+	do @dumpAstType(ast)
+	do @pClosing("TypeEnumElement")
+end func
+
+func dumpAstExpr(ast: @SAstExpr)
+	do @printTab()
+	do @pOpening("<Expr")
+	do @pOpening(" VarKind=\"")
+	switch(ast.varKind)
+	case %unknown
+		do @p("Unknown")
+	case %value
+		do @p("Value")
+	case %localVar
+		do @p("LocalVar")
+	case %globalVar
+		do @p("GlobalVar")
+	case %refVar
+		do @p("RefVar")
+	default
+		assert false
+	end switch
+	do @p("\">\n")
+	do @tab :+ 1
+	do @dumpAst(ast)
+	if(ast.type <>& null)
+		do @printAst("Expr_Type", ast.type)
+	end if
+	do @pClosing("Expr")
+end func
+
+func dumpAstExpr1(ast: @SAstExpr1)
+	do @printTab()
+	do @p("<Expr1")
+	do @p(" Kind=\"")
+	switch(ast.kind)
+	case %plus
+		do @p("Plus")
+	case %minus
+		do @p("Minus")
+	case %not
+		do @p("Not")
+	case %copy
+		do @p("Copy")
+	case %len
+		do @p("Len")
+	default
+		assert false
+	end switch
+	do @p("\">\n")
+	do @tab :+ 1
+	do @dumpAstExpr(ast)
+	do @printAst("Expr1_Child", ast.child)
+	do @pClosing("Expr1")
+end func
+
+func dumpAstExpr2(ast: @SAstExpr2)
+	do @printTab()
+	do @p("<Expr2")
+	do @p(" Kind=\"")
+	switch(ast.kind)
+	case %assign
+		do @p("Assign")
+	case %assignAdd
+		do @p("AssignAdd")
+	case %assignSub
+		do @p("AssignSub")
+	case %assignMul
+		do @p("AssignMul")
+	case %assignDiv
+		do @p("AssignDiv")
+	case %assignMod
+		do @p("AssignMod")
+	case %assignPow
+		do @p("AssignPow")
+	case %assignCat
+		do @p("AssignCat")
+	case %or
+		do @p("Or")
+	case %and
+		do @p("And")
+	case %lt
+		do @p("LT")
+	case %gt
+		do @p("GT")
+	case %le
+		do @p("LE")
+	case %ge
+		do @p("GE")
+	case %eq
+		do @p("Eq")
+	case %nEq
+		do @p("NEq")
+	case %eqRef
+		do @p("EqRef")
+	case %nEqRef
+		do @p("NEqRef")
+	case %cat
+		do @p("Cat")
+	case %add
+		do @p("Add")
+	case %sub
+		do @p("Sub")
+	case %mul
+		do @p("Mul")
+	case %div
+		do @p("Div")
+	case %mod
+		do @p("Mod")
+	case %pow
+		do @p("Pow")
+	case %swap
+		do @p("Swap")
+	default
+		assert false
+	end switch
+	do @p("\"")
+	do @p(">\n")
+	do @tab :+ 1
+	do @dumpAstExpr(ast)
+	do @printAst("Expr2_Child1", ast.child0)
+	do @printAst("Expr2_Child2", ast.child1)
+	do @pClosing("Expr2")
+end func
+
+func dumpAstExpr3(ast: @SAstExpr3)
+	do @pOpening("Expr3")
+	do @printAst("Expr3_Child1", ast.child0)
+	do @printAst("Expr3_Child2", ast.child1)
+	do @printAst("Expr3_Child3", ast.child2)
+	do @pClosing("Expr3")
+end func
+
+func dumpAstExprNew(ast: @SAstExprNew)
+	do @pOpening("ExprNew")
+	do @dumpAstExpr(ast)
+	do @printAst("ExprNew_ItemType", ast.itemType)
+	do @pClosing("ExprNew")
+end func
+
+func dumpAstExprNewArray(ast: @SAstExprNewArray)
+	do @pOpening("ExprNewArray")
+	do @printAstList("ExprNewArray_Idces", ast.idces)
+	do @printAst("ExprNewArray_ItemType", ast.itemType)
+	do @pClosing("ExprNewArray")
+end func
+
+func dumpAstExprAs(ast: @SAstExprAs)
+	do @printTab()
+	do @p("<ExprAs")
+	do @p(" Kind=\"")
+	switch(ast.kind)
+	case %as
+		do @p("As")
+	case %is
+		do @p("Is")
+	case %nIs
+		do @p("NIs")
+	default
+		assert false
+	end switch
+	do @p("\"")
+	do @p(">\n")
+	do @tab :+ 1
+	do @dumpAstExpr(ast)
+	do @printAst("ExprAs_Child", ast.child)
+	do @printAst("ExprAs_ChildType", ast.childType)
+	do @pClosing("ExprAs")
+end func
+
+func dumpAstExprToBin(ast: @SAstExprToBin)
+	do @pOpening("ExprToBin")
+	do @printAst("ExprToBin_Child", ast.child)
+	do @printAst("ExprToBin_ChildType", ast.childType)
+	do @pClosing("ExprToBin")
+end func
+
+func dumpAstExprFromBin(ast: @SAstExprFromBin)
+	do @pOpening("ExprFromBin")
+	do @dumpAstExpr(ast)
+	do @printAst("ExprFromBin_Child", ast.child)
+	do @printAst("ExprFromBin_ChildType", ast.childType)
+	do @printAst("ExprFromBin_Offset", ast.offset)
+	do @pClosing("ExprFromBin")
+end func
+
+func dumpAstExprCall(ast: @SAstExprCall)
+	do @pOpening("ExprCall")
+	do @dumpAstExpr(ast)
+	do @printAst("ExprCall_Func", ast._func)
+	do @pOpening("ExprCall_Args")
+	do ast.args.head()
+	while(!ast.args.term())
+		var arg: @SAstExprCallArg :: ast.args.get() $ @SAstExprCallArg
+		do @printTab()
+		do @p("<ExprCall_Arg")
+		do @pTrueOrFalse("RefVar", arg.refVar)
+		do @p(">\n")
+		do @tab :+ 1
+		do @dumpRecursion(arg)
+		do @pClosing("ExprCall_Arg")
+		do ast.args.next()
+	end while
+	do @pClosing("ExprCall_Args")
+	do @pClosing("ExprCall")
+end func
+
+func dumpAstExprArray(ast: @SAstExprArray)
+	do @pOpening("ExprArray")
+	do @dumpAstExpr(ast)
+	do @printAst("ExprArray_Var", ast._var)
+	do @printAst("ExprArray_Idx", ast.idx)
+	do @pClosing("ExprArray")
+end func
+
+func dumpAstExprDot(ast: @SAstExprDot)
+	do @printTab()
+	do @p("<ExprDot")
+	do @pProperty("Member", ast.member)
+	do @p(">\n")
+	do @tab :+ 1
+	do @dumpAstExpr(ast)
+	do @printAst("ExprDot_Var", ast._var)
+	do @pClosing("ExprDot")
+end func
+
+func dumpAstExprValue(ast: @SAstExprValue)
+	do @printTab()
+	do @p("<ExprValue")
+	do @p(ast.value.toStrFmt("016X"))
+	do @pClosing("ExprValue")
+end func
+
+func dumpAstExprValueArray(ast: @SAstExprValueArray)
+	do @pOpening("ExprValueArray")
+	do @dumpAstExpr(ast)
+	do @pClosing("ExprValueArray")
+end func
+
+func dumpAstExprRef(ast: @SAstExpr)
+	do @pOpening("ExprRef")
+	do @dumpAstExpr(ast)
+	do @pClosing("ExprRef")
+end func
+
+func dumpScope(name: []char, ast: @SAst)
+	do @printTab()
+	do @p("<\{name}")
+	do @pNullOrStr("Name", ast.name)
+	if(ast.scopeParent <>& null)
+		do @pNullOrStr("Parent", ast.scopeParent.name)
+	end if
+	do @p(">\n")
+	do @tab :+ 1
+	if(ast.scopeRefedItems <>& null)
+		do @printTab()
+		do @p("<Refed>\n")
+		do @tab :+ 1
+		do ast.scopeRefedItems.head()
+		while(!ast.scopeRefedItems.term())
+			var ast2: @SAst :: ast.scopeRefedItems.get()
+			do @printTab()
+			do @p("<\{(ast2.name =& null) ?("Null", ast2.name)} />\n")
+			do ast.scopeRefedItems.next()
+		end while
+		do @tab :- 1
+		do @printTab()
+		do @p("</Refed>\n")
+	end if
+	do @tab :- 1
+	if(ast.scopeChildren <>& null)
+		do @tab :+ 1
+		do ast.scopeChildren.forEach(@dumpScopeChildren, null)
+		do @tab :- 1
+	end if
+	do @printTab()
+	do @p("</\{name}\n")
+end func
+
+func dumpScopeChildren(key: []char, value: @SAst, param: kuin@Class): bool
+	do @dumpScope(key, value)
+	ret true
 end func
